@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    restart: always
+    hostname: localhost # set to fqdn of host
+    ports:
+      - 19999:19999
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - netdataetc:/etc/netdata
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      - VIRTUAL_PORT=19999
+      - DOCKER_HOST=proxy:2375
+      - PGID=991
+      - VIRTUALIZATION=kvm
+
+  proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: netdata-proxy
+    volumes:
+     - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CONTAINERS=1
+
+
+volumes:
+  netdatalib:
+    name: netdatalib
+  netdatacache:
+    name: netdatacache
+  netdataetc:
+    name: netdataetc
